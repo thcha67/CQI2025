@@ -1,0 +1,47 @@
+.rc-slider-rail {
+    height: 100px;
+}
+
+.rc-slider-track {
+    height: 100px;
+}
+
+.rc-slider-handle {
+    height: 100px;
+    width: 100px;
+}
+
+.rc-slider-mark {
+    top: 200%;
+}
+
+.slider {
+    margin-bottom: 100px;
+}
+
+.vertical-slider > .rc-slider-vertical > .rc-slider-handle{
+    width: 100px!important;
+}
+
+.vertical-slider > .rc-slider-vertical > .rc-slider-track{
+    width: 100px!important;
+}
+
+.vertical-slider > .rc-slider-vertical > .rc-slider-rail{
+    width: 100px!important;
+    margin: 0 !important;
+}
+
+.button {
+    width: 80%;
+    margin-bottom: 30px;
+    height: 100px !important;
+    font-size: 24px;
+}
+
+.stop-button {
+    width: 80%;
+    margin-top: 30px;
+    height: 200px !important;
+    font-size: 24px;
+}
