@@ -17,6 +17,11 @@ Servo servo_pince;
 Servo servo_updown;
 Servo servo_flip;
 
+const char *ssid = "Je suis Dieu et dispo";
+const char *password = "123456789";
+
+void setup_esp_wifi(const char *ssid, const char *password);
+
 void requestHandler(AsyncWebServerRequest *request);
 
 void initialize_servos(void);
@@ -31,10 +36,6 @@ void backward(uint8_t speed, float correction);
 
 void rotate_clock(void);
 void rotate_counter_clock(void);
-
-
-const char* ssid = "patate";  //replace
-const char* password =  "321radis"; //replace
 
 AsyncWebServer server(80);
  
@@ -51,28 +52,14 @@ void setup()
 
   Serial.println("Starting");
  
-  WiFi.begin(ssid, password);
- 
-   while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.println("Connecting to WiFi..");
-  }
- 
-  Serial.println(WiFi.localIP());
- 
+  setup_esp_wifi(ssid, password);
+
   server.on("/patate", HTTP_GET, [](AsyncWebServerRequest *request){
-    Serial.println("Request received");
-
-    // Ajouter fonction pour traiter le pont H
-    requestHandler(request);
-    
-    request->send(200);
+      requestHandler(request);
     });
-
-
-
-  server.begin();
   
+  server.begin();
+
 }
  
 void loop(){
@@ -105,37 +92,45 @@ void backward(uint8_t speed, float correction)
 }
 
 void requestHandler(AsyncWebServerRequest *request){
-  
-  int16_t angle_pince = (int16_t)(request->getParam("pince")->value().toInt());
-  int16_t angle_updown = (int16_t)(request->getParam("up_down")->value().toInt());
-  int16_t angle_flip = (int16_t)(request->getParam("flip")->value().toInt());
 
-  int8_t speed = (int8_t)(request->getParam("speed")->value().toInt());
+  Serial.println("requestHandler");
+
+  uint16_t key = (uint16_t)(request->getParam("key")->value().toInt());
+
+  Serial.print("angle_pince : ");
+  Serial.println(key);
+  
+  /* int16_t angle_pince = (int16_t)(request->getParam("pince")->value().toInt());
+  int16_t angle_updown = (int16_t)(request->getParam("up_down")->value().toInt());
+  int16_t angle_flip = (int16_t)(request->getParam("flip")->value().toInt()); */
+
+/*   int8_t speed = (int8_t)(request->getParam("speed")->value().toInt());
   float correction = (float)(request->getParam("correction")->value().toFloat());
 
   bool right = (bool)(request->getParam("right")->value().toInt());
-  bool left = (bool)(request->getParam("left")->value().toInt());
+  bool left = (bool)(request->getParam("left")->value().toInt()); */
 
-  /////// DEBUG ///////
+
+
+/* 
   Serial.print("pince : ");
   Serial.print(angle_pince);
   Serial.print(" updown : ");
   Serial.print(angle_updown);
   Serial.print(" flip : ");
-  Serial.println(angle_flip);
-  /////////////////////
+  Serial.println(angle_flip); 
+ 
 
   command_servos(angle_pince, angle_updown, angle_flip);
 
-  /////// DEBUG ///////
+ 
   Serial.print(" speed : ");
   Serial.print(speed);
   Serial.print(" correction : ");
   Serial.print(correction);
-  /////////////////////
+ 
   command_speed(speed, correction);
 
-  /////// DEBUG ///////
   Serial.print(" right : ");
   Serial.print(right);
   Serial.print(" left : ");
@@ -146,7 +141,7 @@ void requestHandler(AsyncWebServerRequest *request){
   }
   else if (left){
     rotate_counter_clock();
-  }
+  }  */
 
 }
 
@@ -224,4 +219,11 @@ void rotate_clock(void){
   delay(200);
 
   null_speed();
+}
+
+void setup_esp_wifi(const char *ssid, const char *password){
+  WiFi.softAP(ssid, password);
+  IPAddress IP = WiFi.softAPIP();
+  Serial.print("AP IP address: ");
+  Serial.println(IP);
 }
