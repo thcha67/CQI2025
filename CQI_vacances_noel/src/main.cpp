@@ -11,18 +11,20 @@
 #define motor1Pin2 D4
 #define motor2Pin1 D5
 #define motor2Pin2 D6
-
-// instances de servos
-Servo servo_pince;
-Servo servo_updown;
-Servo servo_flip;
-
-const char *ssid = "Je suis Dieu et dispo";
-const char *password = "123456789";
+typedef struct{
+  String direction = "None";
+  uint16_t speed = 0;
+  float correction = 0;
+  uint16_t servo1 = 0;
+  uint16_t servo2 = 0;
+  uint16_t servo3 = 0;
+  uint32_t request_count = 0;
+}command_t;
 
 void setup_esp_wifi(const char *ssid, const char *password);
 
 void requestHandler(AsyncWebServerRequest *request);
+void request_getParam(AsyncWebServerRequest *request, command_t *command);
 
 void initialize_servos(void);
 void command_servos(int16_t angle_pince, int16_t angle_updown, int16_t angle_flip);
@@ -37,7 +39,17 @@ void backward(uint8_t speed, float correction);
 void rotate_clock(void);
 void rotate_counter_clock(void);
 
+// instances de servos
+Servo servo_pince;
+Servo servo_updown;
+Servo servo_flip;
+
+const char *ssid = "Je suis Dieu et dispo";
+const char *password = "123456789";
+
 AsyncWebServer server(80);
+
+command_t command;
  
 void setup()
 
@@ -93,12 +105,7 @@ void backward(uint8_t speed, float correction)
 
 void requestHandler(AsyncWebServerRequest *request){
 
-  Serial.println("requestHandler");
-
-  uint16_t key = (uint16_t)(request->getParam("key")->value().toInt());
-
-  Serial.print("angle_pince : ");
-  Serial.println(key);
+    request_getParam(request, &command);
   
   /* int16_t angle_pince = (int16_t)(request->getParam("pince")->value().toInt());
   int16_t angle_updown = (int16_t)(request->getParam("up_down")->value().toInt());
@@ -226,4 +233,92 @@ void setup_esp_wifi(const char *ssid, const char *password){
   IPAddress IP = WiFi.softAPIP();
   Serial.print("AP IP address: ");
   Serial.println(IP);
+}
+
+void request_getParam(AsyncWebServerRequest *request, command_t *command){
+  if (request->hasParam("direction")) {
+        String direction = (String)(request->getParam("direction")->value());
+        command->direction = direction;
+        
+        Serial.print("direction: ");
+        Serial.println(direction);
+
+    } else {
+        Serial.println("direction parameter not found");
+        
+    }
+
+    if (request->hasParam("speed")) {
+        uint16_t speed = (uint16_t)(request->getParam("speed")->value().toInt());
+        command->direction = speed;
+        
+        Serial.print("speed: ");
+        Serial.println(speed);
+
+    } else {
+        Serial.println("speed parameter not found");
+        
+    }
+
+    if (request->hasParam("correction")) {
+        float correction = (float)(request->getParam("correction")->value().toFloat());
+        command->correction = correction;
+        
+        Serial.print("correction: ");
+        Serial.println(correction);
+
+    } else {
+        Serial.println("correction parameter not found");
+        
+    }
+
+     if (request->hasParam("servo1")) {
+        uint16_t servo1 = (uint16_t)(request->getParam("servo1")->value().toInt());
+        command->servo1 = servo1;
+        
+        Serial.print("servo1: ");
+        Serial.println(servo1);
+
+    } else {
+        Serial.println("servo1 parameter not found");
+        
+    }
+
+    if (request->hasParam("servo2")) {
+        uint16_t servo2 = (uint16_t)(request->getParam("servo2")->value().toInt());
+        command->servo2 = servo2;
+        
+        Serial.print("servo2: ");
+        Serial.println(servo2);
+
+    } else {
+        Serial.println("servo2 parameter not found");
+        
+    }
+
+    if (request->hasParam("servo3")) {
+        uint16_t servo3 = (uint16_t)(request->getParam("servo3")->value().toInt());
+        command->servo3 = servo3;
+        
+        Serial.print("servo3: ");
+        Serial.println(servo3);
+
+    } else {
+        Serial.println("servo3 parameter not found");
+        
+    }
+
+    if (request->hasParam("request_count")) {
+        uint32_t request_count = (uint32_t)(request->getParam("request_count")->value().toInt());
+        command->request_count = request_count;
+        
+        Serial.print("request_count: ");
+        Serial.println(request_count);
+
+    } else {
+        Serial.println("request_count parameter not found");
+        
+    }
+
+    
 }
