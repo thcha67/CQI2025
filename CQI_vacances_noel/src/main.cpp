@@ -11,6 +11,11 @@
 #define motor1Pin2 D3
 #define motor2Pin1 D4
 #define motor2Pin2 D5
+
+// Mode debug : Active les prints des requêtes
+#define DEBUG 0
+// Mode control : Active la commande des moteurs et des servos
+#define CONTROL 0
 typedef struct{
   String direction = "None";
   uint16_t speed = 0;
@@ -19,7 +24,14 @@ typedef struct{
   uint16_t servo2 = 0;
   uint16_t servo3 = 0;
   uint32_t request_count = 0;
+
 }command_t;
+
+uint32_t ESP_time_ref = 0;
+
+void set_time_ref(void);
+
+bool is_timout(uint32_t request_time);
 
 void setup_esp_wifi(const char *ssid, const char *password);
 
@@ -27,6 +39,8 @@ void requestHandler(AsyncWebServerRequest *request);
 void request_getParam(AsyncWebServerRequest *request, command_t *command);
 
 void control(command_t *command);
+
+void control_print(command_t *command);
 
 void initialize_servos(void);
 void command_servos(int16_t angle_pince, int16_t angle_updown, int16_t angle_flip);
@@ -77,6 +91,16 @@ void setup()
 }
  
 void loop(){
+  if (CONTROL){
+    control(&command);
+  }
+  else{
+    null_speed();
+  }
+  
+  if (DEBUG){
+    control_print(&command);
+  }
 }
 
 void forward(uint8_t speed, float correction)
@@ -108,50 +132,6 @@ void backward(uint8_t speed, float correction)
 void requestHandler(AsyncWebServerRequest *request){
 
     request_getParam(request, &command);
-  
-  /* int16_t angle_pince = (int16_t)(request->getParam("pince")->value().toInt());
-  int16_t angle_updown = (int16_t)(request->getParam("up_down")->value().toInt());
-  int16_t angle_flip = (int16_t)(request->getParam("flip")->value().toInt()); */
-
-/*   int8_t speed = (int8_t)(request->getParam("speed")->value().toInt());
-  float correction = (float)(request->getParam("correction")->value().toFloat());
-
-  bool right = (bool)(request->getParam("right")->value().toInt());
-  bool left = (bool)(request->getParam("left")->value().toInt()); */
-
-
-
-/* 
-  Serial.print("pince : ");
-  Serial.print(angle_pince);
-  Serial.print(" updown : ");
-  Serial.print(angle_updown);
-  Serial.print(" flip : ");
-  Serial.println(angle_flip); 
- 
-
-  command_servos(angle_pince, angle_updown, angle_flip);
-
- 
-  Serial.print(" speed : ");
-  Serial.print(speed);
-  Serial.print(" correction : ");
-  Serial.print(correction);
- 
-  command_speed(speed, correction);
-
-  Serial.print(" right : ");
-  Serial.print(right);
-  Serial.print(" left : ");
-  Serial.println(left);
-
-  if (right){
-    rotate_clock();
-  }
-  else if (left){
-    rotate_counter_clock();
-  }  */
-
 }
 
 
@@ -245,85 +225,43 @@ void request_getParam(AsyncWebServerRequest *request, command_t *command){
   if (request->hasParam("direction")) {
         String direction = (String)(request->getParam("direction")->value());
         command->direction = direction;
-        
-        Serial.print("direction: ");
-        Serial.println(direction);
 
-    } else {
-        Serial.println("direction parameter not found");
-        
-    }
+    } 
 
     if (request->hasParam("speed")) {
         uint16_t speed = (uint16_t)(request->getParam("speed")->value().toInt());
         command->direction = speed;
-        
-        Serial.print("speed: ");
-        Serial.println(speed);
 
-    } else {
-        Serial.println("speed parameter not found");
-        
-    }
+    } 
 
     if (request->hasParam("correction")) {
         float correction = (float)(request->getParam("correction")->value().toFloat());
         command->correction = correction;
-        
-        Serial.print("correction: ");
-        Serial.println(correction);
-
-    } else {
-        Serial.println("correction parameter not found");
-        
-    }
+ 
+    } 
 
      if (request->hasParam("servo1")) {
         uint16_t servo1 = (uint16_t)(request->getParam("servo1")->value().toInt());
         command->servo1 = servo1;
         
-        Serial.print("servo1: ");
-        Serial.println(servo1);
-
-    } else {
-        Serial.println("servo1 parameter not found");
-        
-    }
+    } 
 
     if (request->hasParam("servo2")) {
         uint16_t servo2 = (uint16_t)(request->getParam("servo2")->value().toInt());
         command->servo2 = servo2;
-        
-        Serial.print("servo2: ");
-        Serial.println(servo2);
 
-    } else {
-        Serial.println("servo2 parameter not found");
-        
     }
 
     if (request->hasParam("servo3")) {
         uint16_t servo3 = (uint16_t)(request->getParam("servo3")->value().toInt());
         command->servo3 = servo3;
-        
-        Serial.print("servo3: ");
-        Serial.println(servo3);
 
-    } else {
-        Serial.println("servo3 parameter not found");
-        
-    }
+    } 
 
     if (request->hasParam("request_count")) {
         uint32_t request_count = (uint32_t)(request->getParam("request_count")->value().toInt());
         command->request_count = request_count;
-        
-        Serial.print("request_count: ");
-        Serial.println(request_count);
 
-    } else {
-        Serial.println("request_count parameter not found");
-        
     }
 
     
@@ -332,4 +270,34 @@ void request_getParam(AsyncWebServerRequest *request, command_t *command){
 void control(command_t *command){
   command_speed_orientation(command);
   command_servos(command->servo1, command->servo2, command->servo3);
+}
+
+void control_print(command_t *command){
+  Serial.print("direction: ");
+  Serial.println(command->direction);
+  Serial.print("speed: ");
+  Serial.println(command->speed);
+  Serial.print("correction: ");
+  Serial.println(command->correction);
+  Serial.print("servo1: ");
+  Serial.println(command->servo1);
+  Serial.print("servo2: ");
+  Serial.println(command->servo2);
+  Serial.print("servo3: ");
+  Serial.println(command->servo3);
+  Serial.print("request_count: ");
+  Serial.println(command->request_count);
+}
+
+void set_time_ref(void){
+  ESP_time_ref = millis();
+}
+
+bool is_timout(uint32_t request_time){
+  if (millis() - ESP_time_ref > (request_time + 1)){
+    return true;
+  }
+  else{
+    return false;
+  }
 }
