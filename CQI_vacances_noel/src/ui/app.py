@@ -12,11 +12,14 @@ drag_mode = "mouseup"
 
 url = "http://192.168.4.1"
 
+state = {"move": {"w" : False, "a": False, "s": False, "d": False}, 
+        "speed": 0, "servo1": None, "servo2": None, "servo3": None, "correction": 1
+    }
 
 app.layout = dbc.Container([
     EventListener(events=[{"event" : "keyup", "props": ["key"]}], id="el_up", logging=True),
     EventListener(events=[{"event" : "keydown", "props": ["key"]}], id="el_down", logging=True),
-    dcc.Interval(id="interval", interval=10),
+    dcc.Interval(id="interval", interval=50),
     dbc.Row([
         dbc.Col([
             html.H1("COSMIC")
@@ -30,6 +33,11 @@ app.layout = dbc.Container([
                 label="",
                 value=0,
                 max=9,
+            ),
+            html.H4("Direction"),
+            html.H6(
+                id='direction',
+                children="Not moving",
             ),
         ], width=2),
         dbc.Col([
@@ -99,102 +107,106 @@ app.layout = dbc.Container([
         labelPosition="right",
         value=True,
         color="white",
-        )
+        ),
+    dcc.Store(id="store", data=state)
 ], fluid=True, style={"marginTop" : "50px"})
 
 
-# @app.callback(
-#     Output("speed", "value"),
-#     Input("stop", "n_clicks"),
-#     prevent_initial_call=True
-# )
-# def stop(stop):
-#     return 0
+move_keys =  state["move"].keys()
+
+@app.callback(
+    Output("store", "data", allow_duplicate=True),
+    Output("el_up", "event", allow_duplicate=True),
+    Input("el_down", "event"),
+    State("store", "data"),
+    prevent_initial_call=True
+)
+def start_to_move(el_down, store):
+    if not el_down:
+        raise PreventUpdate
+    for command in move_keys: # mettre toutes les directions à False
+        store["move"][command] = False
+    direction_key = el_down["key"]
+    if direction_key not in move_keys:
+        raise PreventUpdate
+    store["move"][direction_key] = True
+    return store, None
 
 
-# @app.callback(
-#     Output("indicator", "label", allow_duplicate=True),
-#     Output("indicator", "color", allow_duplicate=True),
-#     Output("speed", "value", allow_duplicate=True),
-#     Input("el_up", "event"),
-#     Input("pince", "value"),
-#     Input("flip", "value"),
-#     Input("up_down", "value"),
-#     Input("correction", "value"),
-#     State("speed", "value"),
-#     prevent_initial_call=True
-# )
-# def send_request(events, pince, flip, up_down, correction, speed):
-#     if not events:
-#         raise PreventUpdate
-#     key = events["key"]
-#     if key in {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"}:
-#         speed = key
-#     query_string = "/patate?key={0}"#&pince={1}&flip={2}&up_down={3}&speed={4}&correction={5}"
-#     request = url + query_string.format(key)#, pince, flip, up_down, speed, correction)
-#     try:
-#         req = requests.get(request, timeout=1)
-#         return "Request Sent", "green", int(speed)
-#     except requests.exceptions.ConnectTimeout:
-#         print(int(speed))
-#         return "Request Timeout ", "red", no_update
-#     except requests.exceptions.ReadTimeout:
-#         return "Read Timeout", "red", no_update
-#     except Exception as e:
-#         print(e)
-#         return "Unknown Request Error", "red", no_update
+@app.callback(
+    Output("store", "data", allow_duplicate=True),
+    Output("el_down", "event", allow_duplicate=True),
+    Input("el_up", "event"),
+    State("store", "data"),
+    prevent_initial_call=True
+)
+def stop_move(el_up, store):
+    if not el_up:
+        raise PreventUpdate
+    direction_key = el_up["key"]
+    if direction_key not in move_keys:
+        raise PreventUpdate
+    store["move"][direction_key] = False
+    return store, None
 
-key_dict = {
-    "a": "left",
-    "d": "right",
-    "w": "forward",
-    "s": "backward"
-}
+
+@app.callback(
+    Output("store", "data", allow_duplicate=True),
+    Input("el_down", "event"),
+    Input("el_up", "event"), # ajouté parce deux callbacks ne peuvent pas avoir les mêmes inputs
+    State("store", "data"),
+    prevent_initial_call=True
+)
+def change_speed(el_down, dummy, store):
+    if not el_down or ctx.triggered_id == "el_up":
+        raise PreventUpdate
+    speed = el_down["key"]
+    if not speed.isdigit():
+        raise PreventUpdate # détecter si un chiffre pour voir si c'est une vitesse
+    store["speed"] = int(speed)
+    return store
+
+
+
+
+direction_dict = {"w": "forward", "a": "left", "s": "backward", "d": "right"}
 
 @app.callback(
     Output("indicator", "label", allow_duplicate=True),
     Output("indicator", "color", allow_duplicate=True),
     Output("speed", "value", allow_duplicate=True),
+    Output("direction", "children", allow_duplicate=True),
     Input("interval", "n_intervals"),
-    Input("el_up", "event"),
-    State("el_down", "event"),
-    State("speed", "value"),
-    State("servo1", "value"),
-    State("servo2", "value"),
-    State("servo3", "value"),
-    State("correction", "value"),
+    State("store", "data"),
     prevent_initial_call=True
 )
-def send_request(n_intervals, events_up, events_down, speed, servo1, servo2, servo3, correction):
-    request = "/patate?direction={0}&servo1={1}&servo2={2}&servo3={3}&speed={4}&correction={5}"
-    if ctx.triggered_id == "interval":
-        if not events_down:
-            raise PreventUpdate
-        key_down = events_down["key"]
-        if key_down in key_dict:
-            direction = key_dict[key_down]
-            request = url + request.format(direction, servo1, servo2, servo3, speed, correction)
-        else:
-            raise PreventUpdate
-    else:
-        if not events_up:
-            raise PreventUpdate
-        key_up = events_up["key"]
-        if events_down.get("key") != key_up:
-            raise PreventUpdate
-        else:
-            request = url + request.format(None, servo1, servo2, servo3, speed, correction)
-    try:
-        requests.get(request, timeout=1)
-        return "Request Sent", "green", int(speed)
-    except requests.exceptions.ConnectTimeout:
-        return "Request Timeout ", "red", no_update
-    except requests.exceptions.ReadTimeout:
-        return "Read Timeout", "red", no_update
-    except Exception as e:
-        return "Unknown Request Error", "red", no_update
+def send_request(n, store):
+    template = "/patate?direction={0}&servo1={1}&servo2={2}&servo3={3}&speed={4}&correction={5}&request_count={6}"
+    direction_key = next((key for key, value in store["move"].items() if value), None)
+    direction = direction_dict.get(direction_key, None)
+    request = url + template.format(
+        direction,
+        store["servo1"], store["servo2"], store["servo3"], store["speed"], store["correction"], n
+    )
 
+    color = "red"
+    message = "Debug"
+    # try:
+    #     #print(request)
+    #     requests.get(request, timeout=1)
+    #     message = "Request Sent"
+    #     color = "green"
+    # except requests.exceptions.ConnectTimeout:
+    #     message = "Request Timeout"
+    # except requests.exceptions.ReadTimeout:
+    #     message = "Read Timeout"
+    # except Exception:
+    #     message = "Unknown Request Error"
+    
+    displayed_speed = store["speed"]
+    displayed_direction = direction.capitalize() if direction else "Not moving"
 
+    return message, color, displayed_speed, displayed_direction
 
 
 
