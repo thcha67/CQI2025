@@ -1,25 +1,27 @@
-from dash import Dash, html, Input, Output, State, ctx, dcc, no_update
+from dash_extensions.enrich import DashProxy, html, Input, Output, State, ctx, dcc, CycleBreakerTransform, NoOutputTransform
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 import requests
 import dash_daq as daq
 from dash_extensions import EventListener
+from time import time
 
 
-app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = DashProxy(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], transforms=[CycleBreakerTransform(), NoOutputTransform()])
 
 drag_mode = "mouseup"
 
 url = "http://192.168.4.1"
+template = "/patate?direction={0}&servo1={1}&servo2={2}&servo3={3}&speed={4}&correction={5}&request_count={6}"
 
 state = {"move": {"w" : False, "a": False, "s": False, "d": False}, 
-        "speed": 0, "servo1": None, "servo2": None, "servo3": None, "correction": 1
+        "speed": 0, "servo1": 0, "servo2": 0, "servo3": 0, "correction": 1
     }
 
 app.layout = dbc.Container([
     EventListener(events=[{"event" : "keyup", "props": ["key"]}], id="el_up", logging=True),
     EventListener(events=[{"event" : "keydown", "props": ["key"]}], id="el_down", logging=True),
-    dcc.Interval(id="interval", interval=50),
+    dcc.Interval(id="interval", interval=10),
     dbc.Row([
         dbc.Col([
             html.H1("COSMIC")
@@ -41,7 +43,7 @@ app.layout = dbc.Container([
             ),
         ], width=2),
         dbc.Col([
-            dbc.Button("Button 1", id="btn1", color="primary", className="button", n_clicks=0, size="lg"),
+            dbc.Button("Start", id="start", color="primary", className="button", n_clicks=0, size="lg"),
             dbc.Button("Button 2", id="btn2", color="primary", className="button", n_clicks=0, size="lg"),
             dbc.Button("STOP", id="stop", color="danger", className="stop-button")
         ], width=2, align="center"),
@@ -100,7 +102,6 @@ app.layout = dbc.Container([
             ),
         ], width=2),
     ]),
-    html.Div(id='output', style={"display": "none"}),
     daq.Indicator(
         id="indicator",
         label="No request yet",
@@ -108,8 +109,21 @@ app.layout = dbc.Container([
         value=True,
         color="white",
         ),
-    dcc.Store(id="store", data=state)
+    html.Div(id='output', style={"display": "none"}),
+    html.Div(id='request_ok', style={"display": "none"}),
+    dcc.Store(id="store", data=state),
+    dcc.Store(id="time_store", data=time(), storage_type="memory"),
+    dcc.Store(id="power", data=0, storage_type="memory")
 ], fluid=True, style={"marginTop" : "50px"})
+
+@app.callback(
+    Output("power", "data", allow_duplicate=True),
+    Input("start", "n_clicks"),
+    prevent_initial_call=True)
+def send_start_time(n_clicks):
+    if n_clicks is None:
+        raise PreventUpdate
+    return 1
 
 
 move_keys =  state["move"].keys()
@@ -132,7 +146,6 @@ def start_to_move(el_down, store):
     store["move"][direction_key] = True
     return store, None
 
-
 @app.callback(
     Output("store", "data", allow_duplicate=True),
     Output("el_down", "event", allow_duplicate=True),
@@ -148,7 +161,6 @@ def stop_move(el_up, store):
         raise PreventUpdate
     store["move"][direction_key] = False
     return store, None
-
 
 @app.callback(
     Output("store", "data", allow_duplicate=True),
@@ -166,7 +178,14 @@ def change_speed(el_down, dummy, store):
     store["speed"] = int(speed)
     return store
 
-
+@app.callback(Output("store", "data", allow_duplicate=True),
+              Output("power", "data", allow_duplicate=True),
+              Input("stop", "n_clicks"),
+              prevent_initial_call=True)
+def stop(n_clicks):
+    if n_clicks is None:
+        raise PreventUpdate
+    return state, 0
 
 
 direction_dict = {"w": "forward", "a": "left", "s": "backward", "d": "right"}
@@ -176,32 +195,43 @@ direction_dict = {"w": "forward", "a": "left", "s": "backward", "d": "right"}
     Output("indicator", "color", allow_duplicate=True),
     Output("speed", "value", allow_duplicate=True),
     Output("direction", "children", allow_duplicate=True),
+    Input("start", "n_clicks"),
     Input("interval", "n_intervals"),
     State("store", "data"),
+    State("power", "data"),
     prevent_initial_call=True
 )
-def send_request(n, store):
-    template = "/patate?direction={0}&servo1={1}&servo2={2}&servo3={3}&speed={4}&correction={5}&request_count={6}"
+def send_request(n_clicks, n_intervals, store, power):
+    if ctx.triggered_id == "start":
+        if n_clicks is None or n_clicks != 1 or power == 1:
+            raise PreventUpdate
+    if ctx.triggered_id == "interval":
+        if power == 0:
+            raise PreventUpdate
+
     direction_key = next((key for key, value in store["move"].items() if value), None)
     direction = direction_dict.get(direction_key, None)
     request = url + template.format(
         direction,
-        store["servo1"], store["servo2"], store["servo3"], store["speed"], store["correction"], n
+        store["servo1"], store["servo2"], store["servo3"], store["speed"], store["correction"], n_intervals,
+        #int(time() - stored_time)
     )
-
     color = "red"
     message = "Debug"
-    # try:
-    #     #print(request)
-    #     requests.get(request, timeout=1)
-    #     message = "Request Sent"
-    #     color = "green"
-    # except requests.exceptions.ConnectTimeout:
-    #     message = "Request Timeout"
-    # except requests.exceptions.ReadTimeout:
-    #     message = "Read Timeout"
-    # except Exception:
-    #     message = "Unknown Request Error"
+    print(power, n_intervals)
+    try:
+        print(request)
+        r = requests.get(request, timeout=0.5, stream=False)
+        print(r)
+        message = "Request Sent"
+        color = "green"
+    except requests.exceptions.ConnectTimeout:
+        message = "Request Timeout"
+    except requests.exceptions.ReadTimeout:
+        message = "Read Timeout"
+    except Exception:
+        print("test")
+        message = "Unknown Request Error"
     
     displayed_speed = store["speed"]
     displayed_direction = direction.capitalize() if direction else "Not moving"
