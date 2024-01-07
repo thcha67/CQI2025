@@ -83,7 +83,9 @@ void setup()
   setup_esp_wifi(ssid, password);
 
   server.on("/patate", HTTP_GET, [](AsyncWebServerRequest *request){
-      requestHandler(request);
+      Serial.println("New request");
+      request_getParam(request, &command);;
+      
     });
   
   server.begin();
@@ -97,7 +99,6 @@ void loop(){
   else{
     null_speed();
   }
-  
   if (DEBUG){
     control_print(&command);
   }
@@ -128,12 +129,6 @@ void backward(uint8_t speed, float correction)
   analogWrite(motor2Pin1, 0);
   analogWrite(motor2Pin2, speed * correction);
 }
-
-void requestHandler(AsyncWebServerRequest *request){
-
-    request_getParam(request, &command);
-}
-
 
 void initialize_servos(void)
 {
@@ -230,7 +225,7 @@ void request_getParam(AsyncWebServerRequest *request, command_t *command){
 
     if (request->hasParam("speed")) {
         uint16_t speed = (uint16_t)(request->getParam("speed")->value().toInt());
-        command->direction = speed;
+        command->speed = speed;
 
     } 
 
