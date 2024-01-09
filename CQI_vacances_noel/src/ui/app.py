@@ -21,7 +21,7 @@ state = {"move": {"w" : False, "a": False, "s": False, "d": False},
 app.layout = dbc.Container([
     EventListener(events=[{"event" : "keyup", "props": ["key"]}], id="el_up", logging=True),
     EventListener(events=[{"event" : "keydown", "props": ["key"]}], id="el_down", logging=True),
-    dcc.Interval(id="interval", interval=10),
+    dcc.Interval(id="interval", interval=50),
     dbc.Row([
         dbc.Col([
             html.H1("COSMIC")
@@ -178,14 +178,17 @@ def change_speed(el_down, dummy, store):
     store["speed"] = int(speed)
     return store
 
-@app.callback(Output("store", "data", allow_duplicate=True),
-              Output("power", "data", allow_duplicate=True),
-              Input("stop", "n_clicks"),
-              prevent_initial_call=True)
+@app.callback(
+    Output("store", "data", allow_duplicate=True),
+    Output("power", "data", allow_duplicate=True),
+    Output("speed", "value", allow_duplicate=True),
+    Output("direction", "children", allow_duplicate=True),
+    Input("stop", "n_clicks"),
+    prevent_initial_call=True)
 def stop(n_clicks):
     if n_clicks is None:
         raise PreventUpdate
-    return state, 0
+    return state, 0, 0, "Not moving"
 
 
 direction_dict = {"w": "forward", "a": "left", "s": "backward", "d": "right"}
@@ -213,28 +216,29 @@ def send_request(n_clicks, n_intervals, store, power):
     direction = direction_dict.get(direction_key, None)
     request = url + template.format(
         direction,
-        store["servo1"], store["servo2"], store["servo3"], store["speed"], store["correction"], n_intervals,
-        #int(time() - stored_time)
+        store["servo1"], store["servo2"], store["servo3"], store["speed"], store["correction"], n_intervals
     )
     color = "red"
     message = "Debug"
     print(power, n_intervals)
-    try:
-        print(request)
-        r = requests.get(request, timeout=0.5, stream=False)
-        print(r)
-        message = "Request Sent"
-        color = "green"
-    except requests.exceptions.ConnectTimeout:
-        message = "Request Timeout"
-    except requests.exceptions.ReadTimeout:
-        message = "Read Timeout"
-    except Exception:
-        print("test")
-        message = "Unknown Request Error"
+    # try:
+    #     print(request)
+    #     r = requests.get(request, timeout=0.5, stream=False)
+    #     print(r)
+    #     message = "Request Sent"
+    #     color = "green"
+    # except requests.exceptions.ConnectTimeout:
+    #     message = "Request Timeout"
+    # except requests.exceptions.ReadTimeout:
+    #     message = "Read Timeout"
+    # except Exception:
+    #     print("test")
+    #     message = "Unknown Request Error"
     
     displayed_speed = store["speed"]
     displayed_direction = direction.capitalize() if direction else "Not moving"
+
+    print(displayed_speed, displayed_direction)
 
     return message, color, displayed_speed, displayed_direction
 
