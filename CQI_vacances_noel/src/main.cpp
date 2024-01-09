@@ -18,9 +18,9 @@
 #define motor2Pin2 D5
 
 // Mode debug : Active les prints des requêtes
-#define DEBUG 1
+#define DEBUG 0
 // Mode control : Active la controle des moteurs et des servos
-#define CONTROL 0
+#define CONTROL 1
 
 uint32_t ESP_time_ref = 0;
 
@@ -61,9 +61,7 @@ void setup()
 
   server.on("/patate", HTTP_GET, [](AsyncWebServerRequest *request){
       espWifi_processRequest(request, &control_data);
-      if (DEBUG){
-        control_printDebug(&control_data);
-      }
+      request->send(200, "text/plain", "OK");
 
       request_counter++;
     });
@@ -79,7 +77,7 @@ void loop(){
   else{
     control_setNullSpeed(&pins);
   }
-/*   if (DEBUG){
-    control_printDebug(&control);
-  } */
+  if (DEBUG){
+    control_printDebug(&control_data);
+  }
 }
