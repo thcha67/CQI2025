@@ -12,20 +12,17 @@
 #define servoPin2 D1
 #define servoPin3 D2
 
-#define motor1Pin1 D6
-#define motor1Pin2 D3
+#define motor1Pin1 D3
+#define motor1Pin2 D6
 #define motor2Pin1 D4
 #define motor2Pin2 D5
 
 // Mode debug : Active les prints des requêtes
 #define DEBUG 1
 // Mode control : Active la controle des moteurs et des servos
-#define CONTROL 0
+#define CONTROL 1
 
-uint32_t ESP_time_ref = 0;
-
-uint32_t request_counter = 0;
-
+bool servo_in_sequence = false;
 
 // instances de servos
 Servo servo1;
@@ -38,7 +35,7 @@ control_pins_t pins = control_setupPins(motor1Pin1, motor1Pin2, motor2Pin1, moto
 
 
 const char *ssid = "Je suis Dieu et dispo";
-const char *password = "123456789";
+const char *password = "les_patates_sont_cuites";
 
 AsyncWebServer server(80);
 
@@ -61,11 +58,9 @@ void setup()
 
   server.on("/patate", HTTP_GET, [](AsyncWebServerRequest *request){
       espWifi_processRequest(request, &control_data);
-      if (DEBUG){
-        control_printDebug(&control_data);
-      }
+      String nb_request = String(control_data.request_count);
+      request->send(200, "text/plain", nb_request);
 
-      request_counter++;
     });
   
   server.begin();
@@ -75,11 +70,15 @@ void setup()
 void loop(){
   if (CONTROL){
     control_update(&control_data, &pins, &servoStruct);
+    if (control_data.servo_in_sequence){
+      Serial.println("Sequence");
+      //control_servoSequence(&servoStruct, &control_data);
+    }
   }
   else{
     control_setNullSpeed(&pins);
   }
-/*   if (DEBUG){
-    control_printDebug(&control);
-  } */
+  if (DEBUG){
+    control_printDebug(&control_data);
+  }
 }

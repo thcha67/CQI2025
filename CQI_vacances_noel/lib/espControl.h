@@ -20,6 +20,7 @@ typedef struct{
   uint16_t servo2 = 0;
   uint16_t servo3 = 0;
   uint32_t request_count = 0;
+  bool servo_in_sequence = false;
 
 }control_t;
 
@@ -48,6 +49,7 @@ void rotate_counter_clock(const control_pins_t * const pins);
 void rotate_clock(const control_pins_t * const pins);
 void control_speed_orientation(const control_t * const control, const control_pins_t * const pins);
 void control_update(const control_t * const control_data_ptr, const control_pins_t * const pins, control_servoStruct_t * const servoStruct);
+void control_servoSequence(control_servoStruct_t *servoStruct, control_t * control_data_ptr);
 void control_printDebug(control_t *control);
 
 #endif // ESPCONTROL_H

@@ -42,7 +42,7 @@ const control_pins_t control_setupPins(const uint8_t motor1Pin1, const uint8_t m
 /// @param correction 
 void forward(const control_pins_t * const pins, uint8_t speed, const float correction)
 {
-  speed = (uint8_t)map(speed, 0, 100, 0, 255);
+  speed = (uint8_t)map(speed, 0, 9, 0, 255);
 
   analogWrite(pins->motor1Pin1, speed);
   analogWrite(pins->motor1Pin2, 0);
@@ -58,7 +58,7 @@ void forward(const control_pins_t * const pins, uint8_t speed, const float corre
 /// @param correction 
 void backward(const control_pins_t * const pins, uint8_t speed, const float correction)
 {
-  speed = (uint8_t)map(speed, 0, 100, 0, 255);
+  speed = (uint8_t)map(speed, 0, 9, 0, 255);
 
   analogWrite(pins->motor1Pin1, 0);
   analogWrite(pins->motor1Pin2, speed);
@@ -145,19 +145,20 @@ void control_speed_orientation(const control_t * const control, const control_pi
     control_setNullSpeed(pins);
     return;
   }
-  else if (control->direction == "Forward"){
+  else if (control->direction == "forward"){
     forward(pins, control->speed, control->correction);
   }
-  else if (control->direction == "Backward"){
+  else if (control->direction == "backward"){
     backward(pins, control->speed, control->correction);
   }
-  else if(control->direction == "Right"){
+  else if(control->direction == "right"){
     rotate_clock(pins);
   }
-  else if(control->direction == "Left"){
+  else if(control->direction == "left"){
     rotate_counter_clock(pins);
   }
   else{
+    Serial.println("ERROR: direction not found, setting speed to 0");
     control_setNullSpeed(pins);
   }
 }
@@ -169,6 +170,26 @@ void control_speed_orientation(const control_t * const control, const control_pi
 void control_update(const control_t * const control_data_ptr, const control_pins_t * const pins, control_servoStruct_t * const servoStruct){
   control_speed_orientation(control_data_ptr, pins);
   control_servos(servoStruct, control_data_ptr->servo1, control_data_ptr->servo2, control_data_ptr->servo3);
+}
+
+void control_servoSequence(control_servoStruct_t *servoStruct, control_t * control_data_ptr){
+  unsigned long start = millis();
+  control_servos(servoStruct, 90, 90, 90);
+  while(millis() - start < 1000){
+    // wait
+  }
+  control_servos(servoStruct, 0, 0, 0);
+  while(millis() - start < 2000){
+    // wait
+  }
+  control_servos(servoStruct, 180, 180, 180);
+   while(millis() - start < 3000){
+    // wait
+  }
+  // Reset the sequence flag to 0
+  control_data_ptr->servo_in_sequence = false;
+  Serial.println("Sequence done");
+
 }
 
 /// @brief Imprime le contenu de la structure control sur le port série pour Debug
