@@ -1,14 +1,19 @@
 .rc-slider-rail {
     height: 100px;
+    border-top-right-radius: 75px!important;
+    border-bottom-right-radius: 75px!important;
 }
 
 .rc-slider-track {
     height: 100px;
+    background: linear-gradient(90deg, white 0%, var(--bs-cyan) 50%, var(--bs-primary) 100%);
 }
 
 .rc-slider-handle {
     height: 100px;
     width: 100px;
+    border-color: var(--bs-primary)!important;
+    margin-top: 0px!important;
 }
 
 .rc-slider-mark {
@@ -21,15 +26,20 @@
 
 .vertical-slider > .rc-slider-vertical > .rc-slider-handle{
     width: 100px!important;
+    border-color: var(--bs-primary)!important;
+    margin-left: 0px!important;
 }
 
 .vertical-slider > .rc-slider-vertical > .rc-slider-track{
     width: 100px!important;
+    background: linear-gradient(0deg, white 0%, var(--bs-cyan) 50%, var(--bs-primary) 100%);
 }
 
 .vertical-slider > .rc-slider-vertical > .rc-slider-rail{
     width: 100px!important;
     margin: 0 !important;
+    border-top-right-radius: 75px!important;
+    border-top-left-radius: 75px!important;
 }
 
 .button {
@@ -39,9 +49,44 @@
     font-size: 24px;
 }
 
-.stop-button {
-    width: 80%;
-    margin-top: 30px;
-    height: 200px !important;
-    font-size: 24px;
+.power-button {
+    width: 100%;
+    margin-bottom: 30px;
 }
+
+.power-button > div > div > button {
+    border-color: var(--bs-primary)!important;
+    border-width: 2px!important;
+}
+
+.switch {
+    width: 100%;
+    margin-bottom: 30px;
+    --size-handle: 60px;
+}
+
+
+.switch > div > div > div {
+    width: calc(2*var(--size-handle))!important;
+    height: 60px!important;
+    padding: 0!important;
+}
+
+
+.switch > div > div > div > button {
+    width: var(--size-handle)!important;
+    height: var(--size-handle)!important;
+}
+
+.switch > div > div > div > button:active {
+    transform: translateX(var(--size-handle))!important;
+}
+
+.dlqMgb {
+    transform: translateX(var(--size-handle))!important;
+}
+
+.color-ranges {
+    stroke-width: 14px!important;
+}
+
