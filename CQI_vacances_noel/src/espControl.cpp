@@ -145,16 +145,16 @@ void control_speed_orientation(const control_t * const control, const control_pi
     control_setNullSpeed(pins);
     return;
   }
-  else if (control->direction == "forward"){
+  else if (control->direction == "w"){
     forward(pins, control->speed, control->correction);
   }
-  else if (control->direction == "backward"){
+  else if (control->direction == "s"){
     backward(pins, control->speed, control->correction);
   }
-  else if(control->direction == "right"){
+  else if(control->direction == "d"){
     rotate_clock(pins);
   }
-  else if(control->direction == "left"){
+  else if(control->direction == "a"){
     rotate_counter_clock(pins);
   }
   else{

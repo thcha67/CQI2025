@@ -56,12 +56,36 @@ void setup()
  
   espWifi_setup(ssid, password);
 
-  server.on("/patate", HTTP_GET, [](AsyncWebServerRequest *request){
+
+// Ancienne méthode de traitement des requêtes
+/*   server.on("/patate", HTTP_GET, [](AsyncWebServerRequest *request){
       espWifi_processRequest(request, &control_data);
       String nb_request = String(control_data.request_count);
       request->send(200, "text/plain", nb_request);
 
+    }); */
+  
+  server.on("/direction", HTTP_GET, [](AsyncWebServerRequest *request){
+      espWifi_processDirectionRequest(request, &control_data);
+      request->send(200, "text/plain", "Direction");
     });
+
+  server.on("/speed", HTTP_GET, [](AsyncWebServerRequest *request){
+      espWifi_processSpeedRequest(request, &control_data);
+      request->send(200, "text/plain", "Speed");
+    });
+
+  server.on("/state", HTTP_GET, [](AsyncWebServerRequest *request){
+      espWifi_processStateRequest(request, &control_data);
+      request->send(200, "text/plain", "State");
+    });
+
+  server.on("/click", HTTP_GET, [](AsyncWebServerRequest *request){
+      espWifi_processClickRequest(request, &control_data);
+      request->send(200, "text/plain", "Click");
+    });
+
+    
   
   server.begin();
 
