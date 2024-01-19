@@ -6,13 +6,13 @@
 
 .rc-slider-track {
     height: 100px;
-    background: linear-gradient(90deg, white 0%, var(--bs-cyan) 50%, var(--bs-primary) 100%);
+    background: linear-gradient(90deg, white 0%, #f9d208 50%, #fc4c03 100%);
 }
 
 .rc-slider-handle {
     height: 100px;
     width: 100px;
-    border-color: var(--bs-primary)!important;
+    border-color: #fc4c03!important;
     margin-top: 0px!important;
 }
 
@@ -24,15 +24,21 @@
     margin-bottom: 100px;
 }
 
+.logo {
+    width: 100px;
+    height: 100px;
+    margin-left: 50px;
+}
+
 .vertical-slider > .rc-slider-vertical > .rc-slider-handle{
     width: 100px!important;
-    border-color: var(--bs-primary)!important;
+    border-color: #fc4c03!important;
     margin-left: 0px!important;
 }
 
 .vertical-slider > .rc-slider-vertical > .rc-slider-track{
     width: 100px!important;
-    background: linear-gradient(0deg, white 0%, var(--bs-cyan) 50%, var(--bs-primary) 100%);
+    background: linear-gradient(0deg, white 0%, #f9d208 50%, #fc4c03 100%);
 }
 
 .vertical-slider > .rc-slider-vertical > .rc-slider-rail{
@@ -47,7 +53,16 @@
     margin-bottom: 30px;
     height: 100px !important;
     font-size: 24px;
+    background-color: #f9a109!important;
+    border-color: #fc4c03!important;
+    color: white!important;
 }
+
+.button:active {
+    background-color: #fc4c03!important;
+    color: white!important;
+}
+
 
 .power-button {
     width: 100%;
@@ -55,7 +70,7 @@
 }
 
 .power-button > div > div > button {
-    border-color: var(--bs-primary)!important;
+    border-color: #fc4c03!important;
     border-width: 2px!important;
 }
 

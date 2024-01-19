@@ -8,11 +8,13 @@ def get_layout():
     return dbc.Container([
     EventListener(events=[{"event" : "keyup", "props": ["key"]}], id="el_up", logging=True),
     EventListener(events=[{"event" : "keydown", "props": ["key"]}], id="el_down", logging=True),
-    dcc.Interval(id="interval", interval=150),
     dbc.Row([
         dbc.Col([
             html.H1("COSMIC")
-        ], width=2, align="center", style={"marginBottom" : "30px"}),
+        ], width=1, align="center"),
+        dbc.Col([
+            html.Img(src="assets/logo.png", className="logo")
+        ], width=1, align="center", style={"marginBottom" : "30px"}),
     ], justify="center", align="center"),
     dbc.Row([
         dbc.Col([
@@ -21,7 +23,7 @@ def get_layout():
                 id='speed',
                 label="",
                 scale={"start": 0, "interval": 1},
-                color={"gradient": True, "ranges": {"white": [0,3], "var(--bs-cyan)": [3,6], "var(--bs-blue)": [6,9]}},
+                color={"gradient": True, "ranges": {"white": [0,3], "#f9d208": [3,6], "#fc4c03": [6,9]}},
                 value=0,
                 max=9,
             ),
@@ -38,11 +40,11 @@ def get_layout():
             ),
         ], width=2, style={"marginRight" : "40px", "textAlign" : "center"}),
         dbc.Col([
-            daq.PowerButton(id='power_btn', on=False, size=100, color="var(--bs-blue)", className="power-button"),
-            dbc.Button("Button 1", id="btn1", color="primary", className="button", n_clicks=0, size="lg"),
-            dbc.Button("Button 2", id="btn2", color="primary", className="button", n_clicks=0, size="lg"),
+            daq.PowerButton(id='power_btn', on=False, size=100, color="#fc4c03", className="power-button"),
+            dbc.Button("Button 1", id="btn1", color="#fc4c03", className="button", n_clicks=0, size="lg"),
+            dbc.Button("Button 2", id="btn2", color="#fc4c03", className="button", n_clicks=0, size="lg"),
             html.H4("Switch 1"),
-            daq.BooleanSwitch(id='switch1', on=False, color="var(--bs-blue)", className="switch"),
+            daq.BooleanSwitch(id='switch1', on=False, color="#fc4c03", className="switch"),
         ], width=2, align="center", style={"marginRight" : "20px", "textAlign" : "center"}),
         dbc.Col([
             html.H4("Servo 1"),

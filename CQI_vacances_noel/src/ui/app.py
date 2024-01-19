@@ -13,7 +13,7 @@ app = DashProxy(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], transform
 
 app.layout = get_layout()
 
-dir_dict = {"w": "forward", "a": "left", "s": "backward", "d": "right"}
+dir_dict = {"w": "forward", "a": "left", "s": "backward", "d": "right", "None": "Not moving"}
 
 @app.callback(
     Output("el_up", "event", allow_duplicate=True),
@@ -27,8 +27,9 @@ def move(el_down, on):
     if not el_down or not on:
         raise PreventUpdate
     key = el_down["key"]
-    if key not in {"a", "s", "d", "w"}:
+    if key not in {"a", "s", "d", "w", " "}:
         raise PreventUpdate
+    if key == " ": key = "None"
     path = f"/direction?dir={key}"
     return None, dir_dict[key].capitalize(), send_request(path, *params)
 
@@ -104,9 +105,9 @@ def change_click_params(btn1, btn2):
 
 
 if __name__ == '__main__':
-    send = False
-    print_code = False
-    print_request = False
+    send = True
+    print_code = True
+    print_request = True
     params = (send, print_code, print_request)
 
     app.run(debug=True, dev_tools_hot_reload=True)
