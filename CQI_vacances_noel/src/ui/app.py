@@ -21,15 +21,19 @@ dir_dict = {"w": "forward", "a": "left", "s": "backward", "d": "right", "None": 
     Output("indicator", "children", allow_duplicate=True),
     Input("el_down", "event"),
     State("power_btn", "on"),
+    State("switch1", "on"),
     prevent_initial_call=True
 )
-def move(el_down, on):
+def move(el_down, on, reverse):
     if not el_down or not on:
         raise PreventUpdate
     key = el_down["key"]
-    if key not in {"a", "s", "d", "w", " "}:
+    if key not in {"a", "s", "d", "w", "Shift"}:
         raise PreventUpdate
-    if key == " ": key = "None"
+    if key == "Shift": key = "None"
+    if reverse:
+        mapping = {"a": "d", "s" : "w", "d": "a", "w": "s", "None": "None"}
+        key = mapping[key]
     path = f"/direction?dir={key}"
     return None, dir_dict[key].capitalize(), send_request(path, *params)
 
@@ -86,29 +90,54 @@ def reset_speed(on):
 )
 def change_state_params(servo1, servo2, servo3, correction, switch1):
     switch1 = 1 if switch1 else 0
-    path = f"/state?servo1={servo1}&servo2={servo2}&servo3={servo3}&correction={correction}&switch1={switch1}"
+    path = f"/state?servo1={servo1}&servo2={servo2}&servo3={servo3}&correction={correction}"#&switch1={switch1}"
     return send_request(path, *params)
+
+# @app.callback(
+#     Input("btn1", "n_clicks"),
+#     Input("btn2", "n_clicks"),
+# )
+# def change_click_params(btn1, btn2):
+#     if ctx.triggered_id == "btn1":
+#         btn1 = 1
+#         btn2 = 0
+#     elif ctx.triggered_id == "btn2":
+#         btn1 = 0
+#         btn2 = 1
+#     path = f"/click?btn1={btn1}&btn2={btn2}"
+#     send_request(path, *params)
+
+@app.callback(
+    Input("switch1", "on"),
+    prevent_initial_call=True
+)
+def reverse(on):
+    if not on:
+        raise PreventUpdate
+    send_request("/state?servo1=0&servo2=180&servo3=0")
+    send_request("/speed?speed=9")
+    send_request("/direction?dir=w")
 
 @app.callback(
     Input("btn1", "n_clicks"),
-    Input("btn2", "n_clicks"),
+    prevent_initial_call=True
 )
-def change_click_params(btn1, btn2):
-    if ctx.triggered_id == "btn1":
-        btn1 = 1
-        btn2 = 0
-    elif ctx.triggered_id == "btn2":
-        btn1 = 0
-        btn2 = 1
-    path = f"/click?btn1={btn1}&btn2={btn2}"
-    send_request(path, *params)
+def interrupteur(*_):
+    send_request("/state?servo1=180&servo2=0")
+
+@app.callback(
+    Input("btn2", "n_clicks"),
+    prevent_initial_call=True
+)
+def porte(*_):
+    send_request("/state?servo2=65") # à vérifier
 
 
 if __name__ == '__main__':
-    send = True
+    send = False
     print_code = True
     print_request = True
     params = (send, print_code, print_request)
 
-    app.run(debug=True, dev_tools_hot_reload=True)
+    app.run(debug=False, dev_tools_hot_reload=True)
 
