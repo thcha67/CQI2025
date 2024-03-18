@@ -47,7 +47,7 @@ def get_layout():
             daq.BooleanSwitch(id='switch1', on=False, color="#fc4c03", className="switch"),
         ], width=2, align="center", style={"marginRight" : "20px", "textAlign" : "center"}),
         dbc.Col([
-            html.H4("Pince"),
+            html.H4("Translation"),
             dcc.Slider(
                 id="servo1",
                 min=0,
@@ -59,7 +59,7 @@ def get_layout():
                 marks=None,
                 tooltip={"always_visible": True, "placement": "bottom"}
             ),
-            html.H4("Translation"),
+            html.H4("Rotation"),
             dcc.Slider(
                 id="servo2",
                 min=0,
@@ -71,7 +71,7 @@ def get_layout():
                 marks=None,
                 tooltip={"always_visible": True, "placement": "bottom"}
             ),
-            html.H4("Rotation"),
+            html.H4("Pince"),
             dcc.Slider(
                 id="servo3",
                 min=0,
