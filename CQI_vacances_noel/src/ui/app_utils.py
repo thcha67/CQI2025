@@ -3,16 +3,15 @@ import threading
 
 url = "http://192.168.4.1"
 
-def send_request_threaded(path, **params):
-    if not params["send"]: # Disable request for debug
-        return "Requesting disabled"
-    if params["print_request"]: # Print path to debug
-        print(path)
+def send_request_threaded(path, *params):
     # Function to send request in a separate thread
-    threading.Thread(target=send_request, args=(path, params["print_code"])).start()
-    return "Request Success"
+    threading.Thread(target=send_request, args=(path, *params)).start()
 
-def send_request(path, print_code=False):
+def send_request(path, send=True, print_code=True, print_request=True):
+    if not send: # Disable request for debug
+        return "Requesting disabled"
+    if print_request: # Print path to debug
+        print(path)
     path = url + path
     try:
         code = requests.get(path, timeout=0.5)

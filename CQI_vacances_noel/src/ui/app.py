@@ -1,7 +1,6 @@
-from dash_extensions.enrich import DashProxy, Input, Output, State, ctx, NoOutputTransform
+from dash_extensions.enrich import DashProxy, Input, Output, State, NoOutputTransform
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
-import threading
 import os
 import sys
 sys.path.append(os.getcwd())
@@ -16,70 +15,60 @@ app.layout = get_layout()
 
 dir_dict = {"w": "forward", "a": "left", "s": "backward", "d": "right", "None": "Not moving"}
 
+
 @app.callback(
-    Output("el_up", "event", allow_duplicate=True),
     Output("direction", "children", allow_duplicate=True),
     Output("indicator", "children", allow_duplicate=True),
-    Input("el_down", "event"),
+    Input("keyboard_move", "n_keydowns"),
+    State("keyboard_move", "keydown"),
     State("power_btn", "on"),
     prevent_initial_call=True
 )
-def move(el_down, on):
-    if not el_down or not on:
+def move(_, keydown, on):
+    if not keydown or not on:
         raise PreventUpdate
-    
-    key = el_down["key"].lower()
-    if key not in {"a", "s", "d", "w"}: raise PreventUpdate
-
+    key = keydown["key"].lower()
     path = f"/direction?dir={key}"
-    message = send_request_threaded(path, **params)
-    return None, dir_dict[key].capitalize(), message
+    return dir_dict[key].capitalize(), send_request_threaded(path, *params)
+
 
 @app.callback(
-    Output("el_down", "event", allow_duplicate=True),
     Output("direction", "children", allow_duplicate=True),
     Output("indicator", "children", allow_duplicate=True),
-    Input("el_up", "event"),
+    Input("keyboard_move", "n_keyups"),
+    State("keyboard_move", "keyup"),
     State("power_btn", "on"),
     prevent_initial_call=True
 )
-def stop_move(el_up, on):
-    if not el_up or not on:
+def stop_move(_, keyup, on):
+    if not keyup or not on:
         raise PreventUpdate
-    key = el_up["key"].lower()
-    if key not in {"a", "s", "d", "w"}:
-        raise PreventUpdate
-    path = f"/direction?dir={None}"
-    message = send_request_threaded(path, **params)
-    return None, "Not moving", message
+    path = f"/direction?dir=None"
+    return "Not moving", send_request_threaded(path, *params)
 
 @app.callback(
     Output("speed", "value", allow_duplicate=True),
     Output("indicator", "children", allow_duplicate=True),
-    Input("el_down", "event"),
-    Input("dummy_input", "children"), # never triggers but prevents error
+    Input("keyboard_speed", "n_keydowns"),
+    State("keyboard_speed", "keydown"),
     State("power_btn", "on"),
     prevent_initial_call=True
 )
-def change_speed(el_down, _, on):
-    if not el_down or not on:
+def change_speed(_, keydown, on):
+    if not keydown or not on:
         raise PreventUpdate
-    key = el_down["key"]
-    if not key.isdigit():
-        raise PreventUpdate
+    key = keydown["key"]
     path = f"/speed?speed={key}"
-    message = send_request_threaded(path, **params)
-    return int(key), message
+    return int(key), send_request_threaded(path, *params)
 
 @app.callback(
     Output("speed", "value", allow_duplicate=True),
     Output("indicator", "children", allow_duplicate=True),
     Input("power_btn", "on"),
 )
-def reset_speed(on):
+def reset_speed(_):
     path = f"/speed?speed=0"
-    message = send_request_threaded(path, **params)
-    return 0, message
+    return 0, send_request_threaded(path, *params)
 
 @app.callback(
     Output("indicator", "children", allow_duplicate=True),
@@ -92,8 +81,8 @@ def reset_speed(on):
 def change_state_params(servo1, servo2, servo3, correction, switch1):
     switch1 = 1 if switch1 else 0
     path = f"/state?servo1={servo1}&servo2={servo2}&servo3={servo3}&correction={correction}"#&switch1={switch1}"
-    message = send_request_threaded(path, **params)
-    return message
+    send_request_threaded(path, *params)
+    return ""
 
 # @app.callback(
 #     Input("btn1", "n_clicks"),
@@ -139,10 +128,7 @@ if __name__ == '__main__':
     send = False
     print_code = True
     print_request = True
-    params = dict(
-        send=send,
-        print_code=print_code,
-        print_request=print_request
-    )
+    params = (send, print_code, print_request)
+
     app.run(debug=True, dev_tools_hot_reload=True)
 

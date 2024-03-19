@@ -1,13 +1,15 @@
 import dash_bootstrap_components as dbc
 from dash_extensions.enrich import dcc, html
 import dash_daq as daq
-from dash_extensions import EventListener
+from dash_extensions import EventListener, Keyboard
 
 
 def get_layout():
     return dbc.Container([
-    EventListener(events=[{"event" : "keyup", "props": ["key"]}], id="el_up", logging=True),
-    EventListener(events=[{"event" : "keydown", "props": ["key"]}], id="el_down", logging=True),
+    # EventListener(events=[{"event" : "keyup", "props": ["key"]}], id="el_up", logging=True),
+    # EventListener(events=[{"event" : "keydown", "props": ["key"]}], id="el_down", logging=True),
+    Keyboard(id="keyboard_move", captureKeys=["w", "a", "s", "d"], eventProps=["key"]),
+    Keyboard(id="keyboard_speed", captureKeys=[str(i) for i in range(10)], eventProps=["key"]),
     dbc.Row([
         dbc.Col([
             html.H1("COSMIC")
