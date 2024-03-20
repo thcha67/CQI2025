@@ -1,3 +1,10 @@
+:root {
+    --color1: #f9d208; 
+    --color2: #f9a109;
+    --color3: #fc4c03;
+    --size-handle: 60px;
+}
+
 .rc-slider-rail {
     height: 100px;
     border-top-right-radius: 75px!important;
@@ -6,13 +13,13 @@
 
 .rc-slider-track {
     height: 100px;
-    background: linear-gradient(90deg, white 0%, #f9d208 50%, #fc4c03 100%);
+    background: linear-gradient(90deg, white 0%, var(--color1) 50%, var(--color3) 100%);
 }
 
 .rc-slider-handle {
     height: 100px;
     width: 100px;
-    border-color: #fc4c03!important;
+    border-color: var(--color3)!important;
     margin-top: 0px!important;
 }
 
@@ -32,13 +39,13 @@
 
 .vertical-slider > .rc-slider-vertical > .rc-slider-handle{
     width: 100px!important;
-    border-color: #fc4c03!important;
+    border-color: var(--color3)!important;
     margin-left: 0px!important;
 }
 
 .vertical-slider > .rc-slider-vertical > .rc-slider-track{
     width: 100px!important;
-    background: linear-gradient(0deg, white 0%, #f9d208 50%, #fc4c03 100%);
+    background: linear-gradient(0deg, white 0%, var(--color1) 50%, var(--color3) 100%);
 }
 
 .vertical-slider > .rc-slider-vertical > .rc-slider-rail{
@@ -53,14 +60,14 @@
     margin-bottom: 30px;
     height: 100px !important;
     font-size: 24px;
-    background-color: #f9a109!important;
-    border-color: #fc4c03!important;
+    background-color: var(--color2)!important;
+    border-color: var(--color3)!important;
     border-width: 2px!important;
     color: white!important;
 }
 
 .button:active {
-    background-color: #fc4c03!important;
+    background-color: var(--color3)!important;
     color: white!important;
 }
 
@@ -71,14 +78,13 @@
 }
 
 .power-button > div > div > button {
-    border-color: #fc4c03!important;
+    border-color: var(--color3)!important;
     border-width: 2px!important;
 }
 
 .switch {
     width: 100%;
     margin-bottom: 30px;
-    --size-handle: 60px;
 }
 
 

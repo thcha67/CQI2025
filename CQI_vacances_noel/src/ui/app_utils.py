@@ -1,11 +1,15 @@
 import requests
-import threading
+from concurrent.futures import ThreadPoolExecutor
 
 url = "http://192.168.4.1"
 
 def send_request_threaded(path, *params):
     # Function to send request in a separate thread
-    threading.Thread(target=send_request, args=(path, *params)).start()
+    #threading.Thread(target=send_request, args=(path, *params)).start()
+    with ThreadPoolExecutor() as executor:
+        value = executor.submit(send_request, path, *params)
+        return value.result()
+    #send_request(path, *params)
 
 def send_request(path, send=True, print_code=True, print_request=True):
     if not send: # Disable request for debug

@@ -1,4 +1,4 @@
-from dash_extensions.enrich import DashProxy, Input, Output, State, NoOutputTransform
+from dash_extensions.enrich import DashProxy, Input, Output, State, clientside_callback
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 import os
@@ -9,11 +9,11 @@ from src.ui.app_layout import get_layout
 from src.ui.app_utils import send_request_threaded
 
 
-app = DashProxy(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], transforms=[NoOutputTransform()])
+app = DashProxy(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 app.layout = get_layout()
 
-dir_dict = {"w": "forward", "a": "left", "s": "backward", "d": "right", "None": "Not moving"}
+dir_dict = {"w": "↑", "a": "←", "s": "↓", "d": "→", "None": "·"}
 
 
 @app.callback(
@@ -24,12 +24,12 @@ dir_dict = {"w": "forward", "a": "left", "s": "backward", "d": "right", "None": 
     State("power_btn", "on"),
     prevent_initial_call=True
 )
-def move(_, keydown, on):
-    if not keydown or not on:
+def keydown(_, keydown, on):
+    if not keydown or not on: 
         raise PreventUpdate
     key = keydown["key"].lower()
     path = f"/direction?dir={key}"
-    return dir_dict[key].capitalize(), send_request_threaded(path, *params)
+    return dir_dict[key], send_request_threaded(path, *params)
 
 
 @app.callback(
@@ -37,14 +37,16 @@ def move(_, keydown, on):
     Output("indicator", "children", allow_duplicate=True),
     Input("keyboard_move", "n_keyups"),
     State("keyboard_move", "keyup"),
+    State("keyboard_move", "keys_pressed"),
     State("power_btn", "on"),
     prevent_initial_call=True
 )
-def stop_move(_, keyup, on):
-    if not keyup or not on:
+def keyup(_, keyup, keys_pressed, on):
+    if not keyup or not on: 
         raise PreventUpdate
-    path = f"/direction?dir=None"
-    return "Not moving", send_request_threaded(path, *params)
+    key = list(keys_pressed.keys())[0].lower() if keys_pressed else "None"
+    path = f"/direction?dir={key}"
+    return dir_dict[key], send_request_threaded(path, *params)
 
 @app.callback(
     Output("speed", "value", allow_duplicate=True),
@@ -55,7 +57,7 @@ def stop_move(_, keyup, on):
     prevent_initial_call=True
 )
 def change_speed(_, keydown, on):
-    if not keydown or not on:
+    if not keydown or not on: 
         raise PreventUpdate
     key = keydown["key"]
     path = f"/speed?speed={key}"
@@ -79,10 +81,10 @@ def reset_speed(_):
     Input("switch1", "on"),
 )
 def change_state_params(servo1, servo2, servo3, correction, switch1):
-    switch1 = 1 if switch1 else 0
-    path = f"/state?servo1={servo1}&servo2={servo2}&servo3={servo3}&correction={correction}"#&switch1={switch1}"
-    send_request_threaded(path, *params)
-    return ""
+    path = f"/state?servo1={servo1}&servo2={servo2}&servo3={servo3}&correction={correction}"#&switch1={1 if switch1 else 0}"
+    return send_request_threaded(path, *params)
+
+
 
 # @app.callback(
 #     Input("btn1", "n_clicks"),
@@ -130,5 +132,6 @@ if __name__ == '__main__':
     print_request = True
     params = (send, print_code, print_request)
 
-    app.run(debug=True, dev_tools_hot_reload=True)
+    app.run(debug=True, dev_tools_hot_reload=True, threaded=False)
+
 

@@ -6,9 +6,7 @@ from dash_extensions import EventListener, Keyboard
 
 def get_layout():
     return dbc.Container([
-    # EventListener(events=[{"event" : "keyup", "props": ["key"]}], id="el_up", logging=True),
-    # EventListener(events=[{"event" : "keydown", "props": ["key"]}], id="el_down", logging=True),
-    Keyboard(id="keyboard_move", captureKeys=["w", "a", "s", "d"], eventProps=["key"]),
+    Keyboard(id="keyboard_move", captureKeys=["w", "a", "s", "d", "W", "A", "S", "D"], eventProps=["key"]),
     Keyboard(id="keyboard_speed", captureKeys=[str(i) for i in range(10)], eventProps=["key"]),
     dbc.Row([
         dbc.Col([
@@ -25,14 +23,15 @@ def get_layout():
                 id='speed',
                 label="",
                 scale={"start": 0, "interval": 1},
-                color={"gradient": True, "ranges": {"white": [0,3], "#f9d208": [3,6], "#fc4c03": [6,9]}},
+                color={"gradient": True, "ranges": {"white": [0,3], "var(--color1)": [3,6], "var(--color3)": [6,9]}},
                 value=0,
                 max=9,
             ),
             html.H4("Direction", style={"marginTop" : "30px"}),
-            html.H6(
+            html.H1(
                 id='direction',
-                children="Not moving",
+                children="·",
+                style={"textWeight" : "bold"}
             ),
             html.H4("Request State", style={"marginTop" : "30px"}),
             html.H6(
@@ -42,11 +41,11 @@ def get_layout():
             ),
         ], width=2, style={"marginRight" : "40px", "textAlign" : "center"}),
         dbc.Col([
-            daq.PowerButton(id='power_btn', on=False, size=100, color="#fc4c03", className="power-button"),
-            dbc.Button("Ouvrir interrupteur", id="btn1", color="#fc4c03", className="button", n_clicks=0, size="lg"),
-            dbc.Button("Porte", id="btn2", color="#fc4c03", className="button", n_clicks=0, size="lg"),
+            daq.PowerButton(id='power_btn', on=False, size=100, className="power-button"),
+            dbc.Button("Ouvrir interrupteur", id="btn1", className="button", n_clicks=0, size="lg"),
+            dbc.Button("Porte", id="btn2", className="button", n_clicks=0, size="lg"),
             html.H4("Reverse"),
-            daq.BooleanSwitch(id='switch1', on=False, color="#fc4c03", className="switch"),
+            daq.BooleanSwitch(id='switch1', on=False, className="switch"),
         ], width=2, align="center", style={"marginRight" : "20px", "textAlign" : "center"}),
         dbc.Col([
             html.H4("Translation"),
