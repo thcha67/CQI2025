@@ -41,11 +41,11 @@ def get_layout():
             ),
         ], width=2, style={"marginRight" : "40px", "textAlign" : "center"}),
         dbc.Col([
-            daq.PowerButton(id='power_btn', on=False, size=100, className="power-button"),
+            daq.PowerButton(id='power_btn', on=False, size=100, className="power-button", color="var(--color3)"),
             dbc.Button("Ouvrir interrupteur", id="btn1", className="button", n_clicks=0, size="lg"),
             dbc.Button("Porte", id="btn2", className="button", n_clicks=0, size="lg"),
             html.H4("Reverse"),
-            daq.BooleanSwitch(id='switch1', on=False, className="switch"),
+            daq.BooleanSwitch(id='switch1', on=False, className="switch", color="var(--color3)"),
         ], width=2, align="center", style={"marginRight" : "20px", "textAlign" : "center"}),
         dbc.Col([
             html.H4("Translation"),

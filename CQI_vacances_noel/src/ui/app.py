@@ -1,4 +1,4 @@
-from dash_extensions.enrich import DashProxy, Input, Output, State, clientside_callback
+from dash_extensions.enrich import DashProxy, Input, Output, State
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 import os
