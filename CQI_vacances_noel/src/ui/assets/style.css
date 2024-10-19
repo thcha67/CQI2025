@@ -24,6 +24,11 @@
     margin-top: 0px!important;
 }
 
+.rc-slider-handle:focus {
+    background-color: var(--color3)!important;
+    border-color: var(--color3)!important;
+}
+
 .rc-slider-mark {
     top: 200%;
 }
@@ -113,3 +118,12 @@
     stroke-width: 14px!important;
 }
 
+#direction {
+    font-weight: 600;
+    font-size: 64px;
+}
+
+/* Color of the gauge value at the bottom */
+.cAPXWV {
+    color: var(--color3)!important;
+}
