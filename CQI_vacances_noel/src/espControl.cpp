@@ -44,6 +44,7 @@ void forward(const control_pins_t * const pins, uint8_t speed, const float corre
 {
   speed = (uint8_t)map(speed, 0, 9, 0, 255);
 
+  // TODO : Enelever ça 
   analogWrite(pins->motor1Pin1, speed);
   analogWrite(pins->motor1Pin2, 0);
 
@@ -60,6 +61,7 @@ void backward(const control_pins_t * const pins, uint8_t speed, const float corr
 {
   speed = (uint8_t)map(speed, 0, 9, 0, 255);
 
+  // TODO : Enelever ça 
   analogWrite(pins->motor1Pin1, 0);
   analogWrite(pins->motor1Pin2, speed);
 
@@ -80,19 +82,57 @@ void control_setupServos(control_servoStruct_t *servoStruct, const control_pins_
   (servoStruct->servo1)->write(0);
   (servoStruct->servo2)->write(0);
   (servoStruct->servo3)->write(0);
+
+  (servoStruct->servo1)->detach();
+  (servoStruct->servo2)->detach();
+  (servoStruct->servo3)->detach();
 }
 
-/// @brief Envoyer une commande aux servos
+/// @brief Modifier l'état des servos
 /// @param servoStruct 
 /// @param servo1_data 
 /// @param servo2_data 
 /// @param servo3_data 
-void control_servos(control_servoStruct_t *servoStruct, const int16_t servo1_data, const int16_t servo2_data, const int16_t servo3_data)
+void control_servos(control_t * control_data_ptr,const control_pins_t * pins, control_servoStruct_t * servoStruct)
 {
-  
-  (servoStruct->servo1)->write(servo1_data);
-  (servoStruct->servo2)->write(servo2_data);
-  (servoStruct->servo3)->write(servo3_data);
+  control_a_servo(servoStruct->servo1, control_data_ptr->attach_all_servos ,pins->servo1, &(control_data_ptr->servo1), &(control_data_ptr->prev_servo1));
+  control_a_servo(servoStruct->servo2, control_data_ptr->attach_all_servos ,pins->servo2, &(control_data_ptr->servo2), &(control_data_ptr->prev_servo2));
+  control_a_servo(servoStruct->servo3, control_data_ptr->attach_all_servos ,pins->servo3, &(control_data_ptr->servo3), &(control_data_ptr->prev_servo3));
+}
+
+/// @brief Modifier l'état d'un servo
+/// Cette fonction permet de gérer l'attach et le detach du servo. Ainsi lorsqu'il est à idle le servo n'est pas attach
+/// Ne modifie pas la valeur si elle est identique.
+/// @param servo 
+/// @param pin
+/// @param new_data
+/// @param prev_data
+void control_a_servo(Servo * servo,const uint8_t pin ,const bool attach , uint16_t * new_data, uint16_t * prev_data)
+{
+    if(*new_data != *prev_data)
+    {
+      if(attach && (servo)->attached()) // Servo already attach. Just modify state.
+      {
+        (servo)->write(*new_data); 
+      }
+      else if(attach && !((servo)->attached())) // Servo is not attach and attach is required.
+      {
+        (servo)->attach(pin ,620, 2420); // 
+        (servo)->write(*new_data);
+      }
+      else if (!attach && (servo)->attached()) // Servo is attached but not required.
+      {
+        (servo)->write(*new_data);
+        (servo)->detach();
+      }
+      else if (!attach && !(servo)->attached()) // Servo is not attach and not required.
+      {
+        (servo)->attach(pin ,620, 2420);
+        (servo)->write(*new_data);
+        (servo)->detach();
+      }
+      *prev_data = *new_data;
+    }
 }
 
 
@@ -121,20 +161,25 @@ void control_setNullSpeed(const control_pins_t * const pins){
 
 /// @brief Rotation du robot dans le sens anti-horaire
 /// @param pins 
-void rotate_counter_clock(const control_pins_t * const pins){
+void rotate_counter_clock(const control_pins_t * const pins, uint8_t speed, const float correction){
+  speed = (uint8_t)map(speed, 0, 9, 0, 255);
+
   analogWrite(pins->motor1Pin1, 0);
-  analogWrite(pins->motor1Pin2, 255);
-  analogWrite(pins->motor2Pin1, 255);
+  analogWrite(pins->motor1Pin2, speed * correction);
+  analogWrite(pins->motor2Pin1, speed * correction);
   analogWrite(pins->motor2Pin2, 0);
 }
 
 /// @brief Rotation du robot dans le sens horaire
 /// @param pins 
-void rotate_clock(const control_pins_t * const pins){
-  analogWrite(pins->motor1Pin1, 255);
+void rotate_clock(const control_pins_t * const pins, uint8_t speed, const float correction){
+  speed = (uint8_t)map(speed, 0, 9, 0, 255);
+
+  analogWrite(pins->motor1Pin1, speed * correction);
   analogWrite(pins->motor1Pin2, 0);
+
   analogWrite(pins->motor2Pin1, 0);
-  analogWrite(pins->motor2Pin2, 255);
+  analogWrite(pins->motor2Pin2, speed * correction);
 }
 
 /// @brief  Met à jour les moteurs et les servos en fonction du contenu de la structure control
@@ -152,10 +197,10 @@ void control_speed_orientation(const control_t * const control, const control_pi
     backward(pins, control->speed, control->correction);
   }
   else if(control->direction == "d"){
-    rotate_clock(pins);
+    rotate_clock(pins, control->speed, control->correction);
   }
   else if(control->direction == "a"){
-    rotate_counter_clock(pins);
+    rotate_counter_clock(pins, control->speed, control->correction);
   }
   else{
     Serial.println("ERROR: direction not found, setting speed to 0");
@@ -167,11 +212,17 @@ void control_speed_orientation(const control_t * const control, const control_pi
 /// @param control_data_ptr 
 /// @param pins 
 /// @param servoStruct 
-void control_update(const control_t * const control_data_ptr, const control_pins_t * const pins, control_servoStruct_t * const servoStruct){
+void control_update(control_t * control_data_ptr,const control_pins_t * const pins, control_servoStruct_t * const servoStruct){
   control_speed_orientation(control_data_ptr, pins);
-  control_servos(servoStruct, control_data_ptr->servo1, control_data_ptr->servo2, control_data_ptr->servo3);
+
+  if(control_data_ptr->servo_is_modified)
+  {
+    control_servos(control_data_ptr, pins, servoStruct);
+    control_data_ptr->servo_is_modified = false;
+  }
 }
 
+/*
 void control_servoSequence(control_servoStruct_t *servoStruct, control_t * control_data_ptr){
   unsigned long start = millis();
   control_servos(servoStruct, 90, 90, 90);
@@ -191,10 +242,14 @@ void control_servoSequence(control_servoStruct_t *servoStruct, control_t * contr
   Serial.println("Sequence done");
 
 }
+*/
 
 /// @brief Imprime le contenu de la structure control sur le port série pour Debug
 /// @param control 
-void control_printDebug(control_t *control){
+void control_printDebug(control_t *control, unsigned long time){
+  Serial.print("[");
+  Serial.print(time);
+  Serial.println("]");
   Serial.print("direction: ");
   Serial.println(control->direction);
   Serial.print("speed: ");
@@ -207,6 +262,4 @@ void control_printDebug(control_t *control){
   Serial.println(control->servo2);
   Serial.print("servo3: ");
   Serial.println(control->servo3);
-  Serial.print("request_count: ");
-  Serial.println(control->request_count);
 }
