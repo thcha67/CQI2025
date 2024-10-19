@@ -1,7 +1,7 @@
 :root {
-    --color1: #f9d208; 
-    --color2: #f9a109;
-    --color3: #fc4c03;
+    --color1: #1ae385; 
+    --color2: #0da3c3;
+    --color3: #0064ff;
     --size-handle: 60px;
 }
 
@@ -33,7 +33,7 @@
 }
 
 .logo {
-    width: 100px;
+    width: 176px;
     height: 100px;
     margin-left: 50px;
 }

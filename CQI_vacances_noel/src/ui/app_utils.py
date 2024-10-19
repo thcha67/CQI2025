@@ -6,6 +6,9 @@ url = "http://192.168.4.1"
 def send_request_threaded(path, *params):
     # Function to send request in a separate thread
     #threading.Thread(target=send_request, args=(path, *params)).start()
+    print(path)
+    requests.get(url + path)
+    return
     with ThreadPoolExecutor() as executor:
         value = executor.submit(send_request, path, *params)
         return value.result()
@@ -30,5 +33,4 @@ def send_request(path, send=True, print_code=True, print_request=True):
         message = "Connection Error"
     except Exception as e:
         message = "Error cause: " + str(e.__cause__)
-    print(message)
     return message

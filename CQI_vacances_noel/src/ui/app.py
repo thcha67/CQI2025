@@ -1,20 +1,26 @@
 from dash_extensions.enrich import DashProxy, Input, Output, State
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
-import os
-import sys
+import os, sys
 sys.path.append(os.getcwd())
 
-from src.ui.app_layout import get_layout
+from src.ui.app_layout import layout
 from src.ui.app_utils import send_request_threaded
 
 
 app = DashProxy(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-app.layout = get_layout()
+app.layout = layout
 
 dir_dict = {"w": "↑", "a": "←", "s": "↓", "d": "→", "None": "·"}
 
+@app.callback(
+    Output("logo", "src"),
+    Input("logo", "n_clicks"),
+    prevent_initial_call=True
+)
+def change_logo(_):
+    return "assets/logo2025.png" if _ % 2 == 0 else "assets/logo2025_glow.png"
 
 @app.callback(
     Output("direction", "children", allow_duplicate=True),
@@ -28,7 +34,7 @@ def keydown(_, keydown, on):
     if not keydown or not on: 
         raise PreventUpdate
     key = keydown["key"].lower()
-    path = f"/direction?dir={key}"
+    path = f"/direction?direction={key}"
     return dir_dict[key], send_request_threaded(path, *params)
 
 
@@ -45,7 +51,7 @@ def keyup(_, keyup, keys_pressed, on):
     if not keyup or not on: 
         raise PreventUpdate
     key = list(keys_pressed.keys())[0].lower() if keys_pressed else "None"
-    path = f"/direction?dir={key}"
+    path = f"/direction?direction={key}"
     return dir_dict[key], send_request_threaded(path, *params)
 
 @app.callback(
@@ -127,11 +133,11 @@ def change_state_params(servo1, servo2, servo3, correction, switch1):
 
 
 if __name__ == '__main__':
-    send = False
-    print_code = True
+    send = True
+    print_code = False
     print_request = True
     params = (send, print_code, print_request)
 
-    app.run(debug=True, dev_tools_hot_reload=True, threaded=False)
+    app.run(debug=True)
 
 

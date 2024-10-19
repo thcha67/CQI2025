@@ -1,11 +1,10 @@
 import dash_bootstrap_components as dbc
 from dash_extensions.enrich import dcc, html
 import dash_daq as daq
-from dash_extensions import EventListener, Keyboard
+from dash_extensions import Keyboard
 
 
-def get_layout():
-    return dbc.Container([
+layout = dbc.Container([
     Keyboard(id="keyboard_move", captureKeys=["w", "a", "s", "d", "W", "A", "S", "D"], eventProps=["key"]),
     Keyboard(id="keyboard_speed", captureKeys=[str(i) for i in range(10)], eventProps=["key"]),
     dbc.Row([
@@ -13,8 +12,8 @@ def get_layout():
             html.H1("COSMIC")
         ], width=1, align="center"),
         dbc.Col([
-            html.Img(src="assets/logo.png", className="logo")
-        ], width=1, align="center", style={"marginBottom" : "30px"}),
+            html.Img(id="logo", src="assets/logo2025.png", className="logo", draggable="true")
+        ], width=1, align="center", style={"marginBottom" : "0px"}),
     ], justify="center", align="center"),
     dbc.Row([
         dbc.Col([
@@ -102,6 +101,5 @@ def get_layout():
             ),
         ], width=2),
     ]),
-    html.Div(id="dummy_input", style={"display" : "none"}),
 ], fluid=True, style={"marginTop" : "50px"})
 
