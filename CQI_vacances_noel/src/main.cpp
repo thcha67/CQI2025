@@ -35,11 +35,14 @@ control_pins_t pins = control_setupPins(motor1Pin1, motor1Pin2, motor2Pin1, moto
 
 
 const char *ssid = "Je suis Dieu et dispo";
-const char *password = "les_patates_sont_cuites";
+const char *password = "ginettereno";
 
 AsyncWebServer server(80);
 
 control_t control_data;
+
+unsigned long starttime;
+unsigned long mytime;
  
 void setup()
 
@@ -58,13 +61,7 @@ void setup()
 
 
 // Ancienne méthode de traitement des requêtes
-/*   server.on("/patate", HTTP_GET, [](AsyncWebServerRequest *request){
-      espWifi_processRequest(request, &control_data);
-      String nb_request = String(control_data.request_count);
-      request->send(200, "text/plain", nb_request);
 
-    }); */
-  
   server.on("/direction", HTTP_GET, [](AsyncWebServerRequest *request){
       espWifi_processDirectionRequest(request, &control_data);
       request->send(200, "text/plain", "Direction");
@@ -80,29 +77,34 @@ void setup()
       request->send(200, "text/plain", "State");
     });
 
+  /*
   server.on("/click", HTTP_GET, [](AsyncWebServerRequest *request){
       espWifi_processClickRequest(request, &control_data);
       request->send(200, "text/plain", "Click");
     });
-
+  */
     
   
   server.begin();
 
+  starttime = millis();
 }
  
 void loop(){
   if (CONTROL){
     control_update(&control_data, &pins, &servoStruct);
+    /*
     if (control_data.servo_in_sequence){
       Serial.println("Sequence");
-      //control_servoSequence(&servoStruct, &control_data);
+      control_servoSequence(&servoStruct, &control_data);
     }
+    */
   }
   else{
     control_setNullSpeed(&pins);
   }
   if (DEBUG){
-    control_printDebug(&control_data);
+    mytime = millis() - starttime;
+    control_printDebug(&control_data, mytime);
   }
 }
