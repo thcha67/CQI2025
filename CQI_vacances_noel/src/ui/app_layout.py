@@ -8,10 +8,11 @@ layout = dbc.Container([
     Keyboard(id="keyboard_move", captureKeys=["w", "a", "s", "d", "W", "A", "S", "D"], eventProps=["key"], n_keydowns=0),
     Keyboard(id="keyboard_speed", captureKeys=[str(i) for i in range(1, 10)], eventProps=["key"], n_keydowns=0),
     Keyboard(id="keyboard_switch", captureKeys=["u", "U"], eventProps=["key"], n_keydowns=0),
-    Keyboard(id="keyboard_servo", captureKeys=["j", "J", "k", "K", "l", "L"], eventProps=["key"], n_keydowns=0),
+    Keyboard(id="keyboard_servo", captureKeys=["g", "G", "h", "H"], eventProps=["key"], n_keydowns=0),
+    Keyboard(id="keyboard_slice", captureKeys=["k", "K", "l", "L"], eventProps=["key"], n_keydowns=0),
     dbc.Row([
         dbc.Col([
-            html.H1("COSMIC")
+            html.H1("CHRONIC")
         ], width=1, align="center"),
         dbc.Col([
             html.Img(id="logo", src="assets/logo2025.png", className="logo", draggable="true")
@@ -46,13 +47,13 @@ layout = dbc.Container([
         ], width=2, style={"marginRight" : "40px", "textAlign" : "center"}),
         dbc.Col([
             daq.PowerButton(id='power_btn', on=False, size=100, className="power-button", color="var(--color3)"),
-            dbc.Button("Ouvrir interrupteur", id="btn1", className="button", n_clicks=0, size="lg"),
-            dbc.Button("Porte", id="btn2", className="button", n_clicks=0, size="lg"),
+            dbc.Button("Slice up (k)", id="slice_up", className="button", n_clicks=0, size="lg"),
+            dbc.Button("Slice down (l)", id="slice_down", className="button", n_clicks=0, size="lg"),
             html.H4("Attach (u)"),
             daq.BooleanSwitch(id='switch', on=False, className="switch", color="var(--color3)"),
         ], width=2, align="center", style={"marginRight" : "20px", "textAlign" : "center"}),
         dbc.Col([
-            html.H4("Servo 1 (j ←→)"),
+            html.H4("Pince droite (g ←→)"),
             dcc.Slider(
                 id="servo1",
                 min=0,
@@ -64,7 +65,7 @@ layout = dbc.Container([
                 marks=None,
                 tooltip={"always_visible": True, "placement": "bottom"}
             ),
-            html.H4("Servo 2 (k ←→)"),
+            html.H4("Pince gauche (h ←→)"),
             dcc.Slider(
                 id="servo2",
                 min=0,
@@ -76,19 +77,7 @@ layout = dbc.Container([
                 marks=None,
                 tooltip={"always_visible": True, "placement": "bottom"}
             ),
-            html.H4("Servo 3 (l ←→)"),
-            dcc.Slider(
-                id="servo3",
-                min=0,
-                max=180,
-                value=0,
-                step=5,
-                className="slider",
-                updatemode="mouseup",
-                marks=None,
-                tooltip={"always_visible": True, "placement": "bottom"}
-            ),
-        ], width=5, style={"marginRight" : "20px"}),
+        ], width=5, style={"marginRight" : "20px"}, align="center"),
         dbc.Col([
             html.H4("Correction"),
             dcc.Slider(

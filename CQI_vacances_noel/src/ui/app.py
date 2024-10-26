@@ -1,7 +1,7 @@
 import os, sys
 sys.path.append(os.getcwd())
 
-from dash_extensions.enrich import DashProxy, Input, Output, State, clientside_callback
+from dash_extensions.enrich import DashProxy, Input, Output, State, ctx
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 import requests
@@ -106,20 +106,41 @@ app.clientside_callback(
     function update_servo(key_pressed) {
         const key = key_pressed.key.toLowerCase();
         let servo;
-            if (key === "j") {
+            if (key === "g") {
                 document.getElementById("servo1").querySelector(".rc-slider-handle").focus();
-            } else if (key === "k") {
+            } else if (key === "h") {
                 document.getElementById("servo2").querySelector(".rc-slider-handle").focus();
-            } else if (key === "l") {
-                document.getElementById("servo3").querySelector(".rc-slider-handle").focus();
             } else {
                 return window.dash_clientside.no_update;
             }
         return window.dash_clientside.no_update;
     }
     """, 
-    Output("logo", "style"), # Dummy output
+    Output("logo", "style", allow_duplicate=True), # Dummy output
     Input("keyboard_servo", "keydown"),
+    prevent_initial_call=True
+)
+
+app.clientside_callback(
+    """
+    function update_slice_btns(_, key_pressed) {
+        const key = key_pressed.key.toLowerCase();
+        console.log(key);
+        let servo;
+            if (key === "k") {
+                document.getElementById("slice_up").click();
+                console.log(document.getElementById("slice_up"));
+            } else if (key === "l") {
+                document.getElementById("slice_down").click();
+            } else {
+                return window.dash_clientside.no_update;
+            }
+        return window.dash_clientside.no_update;
+    }
+    """, 
+    Output("logo", "style", allow_duplicate=True), # Dummy output
+    Input("keyboard_slice", "n_keydowns"),
+    State("keyboard_slice", "keydown"),
     prevent_initial_call=True
 )
 
@@ -127,17 +148,29 @@ app.clientside_callback(
     Output("indicator", "children", allow_duplicate=True),
     Input("servo1", "value"),
     Input("servo2", "value"),
-    Input("servo3", "value"),
     Input("correction", "value"),
     Input("switch", "on"),
     prevent_initial_call=True
 )
-def change_state_params(servo1, servo2, servo3, correction, switch):
-    path = f"/state?servo1={servo1}&servo2={servo2}&servo3={servo3}&correction={correction}&attach={1 if switch else 0}"
+def change_state_params(servo1, servo2, correction, switch):
+    path = f"/state?servo1={servo1}&servo2={servo2}&correction={correction}&attach={1 if switch else 0}"
     return send_request(path, SEND, PRINT)
 
 
-
+@app.callback(
+    Output("indicator", "children", allow_duplicate=True),
+    Input("slice_up", "n_clicks"),
+    Input("slice_down", "n_clicks"),
+    prevent_initial_call=True
+)
+def slice_up_down(*_):
+    if ctx.triggered_id == "slice_up":
+        path = "/slice?up=1&down=0"
+    elif ctx.triggered_id == "slice_down":
+        path = "/slice?up=0&down=1"
+    else:
+        raise PreventUpdate
+    return send_request(path, SEND, PRINT)
 
 
 # @app.callback(
