@@ -23,7 +23,7 @@ def send_request(path, send=True, print_request=True):
     if not send: # Disable request for debug
         return "Requesting disabled"
     try:
-        requests.get(URL + path, timeout=0.5)
+        code = requests.get(URL + path, timeout=0.5)
         return "Request Success"
     except requests.exceptions.ConnectTimeout:
         message = "Request Timeout"
@@ -82,7 +82,6 @@ def keyup(_, keyup, keys_pressed, on):
     Input("keyboard_speed", "n_keydowns"),
     State("keyboard_speed", "keydown"),
     State("power_btn", "on"),
-    prevent_initial_call=True
 )
 def change_speed(_, keydown, on):
     if not keydown or not on: 
@@ -90,16 +89,6 @@ def change_speed(_, keydown, on):
     key = keydown["key"]
     path = f"/speed?speed={key}"
     return int(key), send_request(path, SEND, PRINT)
-
-
-@app.callback(
-    Output("switch", "on"),
-    Input("keyboard_switch", "n_keydowns"),
-    State("switch", "on"),
-    prevent_initial_call=True
-)
-def toggle_switch(_, on):
-    return not on
 
 app.clientside_callback(
     """
@@ -129,7 +118,6 @@ app.clientside_callback(
         let servo;
             if (key === "k") {
                 document.getElementById("slice_up").click();
-                console.log(document.getElementById("slice_up"));
             } else if (key === "l") {
                 document.getElementById("slice_down").click();
             } else {
@@ -148,12 +136,25 @@ app.clientside_callback(
     Output("indicator", "children", allow_duplicate=True),
     Input("servo1", "value"),
     Input("servo2", "value"),
-    Input("correction", "value"),
-    Input("switch", "on"),
+    State("power_btn", "on"),
     prevent_initial_call=True
 )
-def change_state_params(servo1, servo2, correction, switch):
-    path = f"/state?servo1={servo1}&servo2={servo2}&correction={correction}&attach={1 if switch else 0}"
+def change_state_params(servo1, servo2, on):
+    if not on:
+        raise PreventUpdate
+    path = f"/state?servo1={servo1}&servo2={servo2}"
+    return send_request(path, SEND, PRINT)
+
+@app.callback(
+    Output("indicator", "children", allow_duplicate=True),
+    Input("correction", "value"),
+    State("power_btn", "on"),
+    prevent_initial_call=True,
+)
+def change_correction(correction, on):
+    if not on:
+        raise PreventUpdate
+    path = f"/correction?correction={correction}"
     return send_request(path, SEND, PRINT)
 
 
@@ -161,9 +162,12 @@ def change_state_params(servo1, servo2, correction, switch):
     Output("indicator", "children", allow_duplicate=True),
     Input("slice_up", "n_clicks"),
     Input("slice_down", "n_clicks"),
+    State("power_btn", "on"),
     prevent_initial_call=True
 )
-def slice_up_down(*_):
+def slice_up_down(_, __, on):
+    if not on:
+        raise PreventUpdate
     if ctx.triggered_id == "slice_up":
         path = "/slice?up=1&down=0"
     elif ctx.triggered_id == "slice_down":
@@ -172,46 +176,17 @@ def slice_up_down(*_):
         raise PreventUpdate
     return send_request(path, SEND, PRINT)
 
-
-# @app.callback(
-#     Input("btn1", "n_clicks"),
-#     Input("btn2", "n_clicks"),
-# )
-# def change_click_params(btn1, btn2):
-#     if ctx.triggered_id == "btn1":
-#         btn1 = 1
-#         btn2 = 0
-#     elif ctx.triggered_id == "btn2":
-#         btn1 = 0
-#         btn2 = 1
-#     path = f"/click?btn1={btn1}&btn2={btn2}"
-#     send_request(path, *params)
-
-# @app.callback(
-#     Input("switch1", "on"),
-#     prevent_initial_call=True
-# )
-# def reverse(on):
-#     if not on:
-#         raise PreventUpdate
-#     send_request("/state?servo1=0&servo2=180&servo3=0")
-#     send_request("/speed?speed=9")
-#     send_request("/direction?dir=w")
-
-# @app.callback(
-#     Input("btn1", "n_clicks"),
-#     prevent_initial_call=True
-# )
-# def interrupteur(*_):
-#     send_request("/state?servo1=180&servo2=0")
-
-# @app.callback(
-#     Input("btn2", "n_clicks"),
-#     prevent_initial_call=True
-# )
-# def porte(*_):
-#     send_request("/state?servo2=65") # à vérifier
-
+@app.callback(
+    Output("indicator", "children", allow_duplicate=True),
+    Input("voyage", "n_clicks"),
+    State("power_btn", "on"),
+    prevent_initial_call=True
+)
+def time_travel(_, on):
+    if on:
+        raise PreventUpdate
+    path = "/dance"
+    return send_request(path, SEND, PRINT)
 
 if __name__ == '__main__':
     SEND = True

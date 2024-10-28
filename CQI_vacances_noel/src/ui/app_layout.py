@@ -2,6 +2,7 @@ import dash_bootstrap_components as dbc
 from dash_extensions.enrich import dcc, html
 import dash_daq as daq
 from dash_extensions import Keyboard
+import datetime
 
 
 layout = dbc.Container([
@@ -12,7 +13,7 @@ layout = dbc.Container([
     Keyboard(id="keyboard_slice", captureKeys=["k", "K", "l", "L"], eventProps=["key"], n_keydowns=0),
     dbc.Row([
         dbc.Col([
-            html.H1("CHRONIC")
+            html.H1("CHRONOS")
         ], width=1, align="center"),
         dbc.Col([
             html.Img(id="logo", src="assets/logo2025.png", className="logo", draggable="true")
@@ -20,7 +21,7 @@ layout = dbc.Container([
     ], justify="center", align="center"),
     dbc.Row([
         dbc.Col([
-            html.H4("Speed (1-9)"),
+            html.H4("Vitesse (1-9)"),
             daq.Gauge(
                 id='speed',
                 size=200,
@@ -38,52 +39,53 @@ layout = dbc.Container([
                 children="·",
                 style={"textWeight" : "bold"}
             ),
-            html.H4("Request State", style={"marginTop" : "30px"}),
+            html.H4("État des requêtes", style={"marginTop" : "30px"}),
             html.H6(
                 id="indicator",
                 children="",
-                style={'whiteSpace': 'pre-wrap'}
+                style={'whiteSpace': 'pre-wrap'  }
             ),
         ], width=2, style={"marginRight" : "40px", "textAlign" : "center"}),
         dbc.Col([
             daq.PowerButton(id='power_btn', on=False, size=100, className="power-button", color="var(--color3)"),
-            dbc.Button("Slice up (k)", id="slice_up", className="button", n_clicks=0, size="lg"),
-            dbc.Button("Slice down (l)", id="slice_down", className="button", n_clicks=0, size="lg"),
-            html.H4("Attach (u)"),
-            daq.BooleanSwitch(id='switch', on=False, className="switch", color="var(--color3)"),
+            dbc.Button("Lame bas (k)", id="slice_up", className="button", n_clicks=0, size="lg"),
+            dbc.Button("Lame haut (l)", id="slice_down", className="button", n_clicks=0, size="lg"),
         ], width=2, align="center", style={"marginRight" : "20px", "textAlign" : "center"}),
         dbc.Col([
-            html.H4("Pince droite (g ←→)"),
+            html.H4("Pince gauche (g ←→)"),
             dcc.Slider(
                 id="servo1",
-                min=0,
-                max=180,
-                value=0,
+                min=70,
+                max=165,
+                value=165,
                 step=5,
                 className="slider",
                 updatemode="mouseup",
                 marks=None,
                 tooltip={"always_visible": True, "placement": "bottom"}
             ),
-            html.H4("Pince gauche (h ←→)"),
+            html.H4("Pince droite (h ←→)"),
             dcc.Slider(
                 id="servo2",
-                min=0,
-                max=180,
-                value=0,
+                min=70,
+                max=165,
+                value=170,
                 step=5,
                 className="slider",
                 updatemode="mouseup",
                 marks=None,
                 tooltip={"always_visible": True, "placement": "bottom"}
             ),
+            html.H4("Voyage dans le temps (F10)"),
+            dcc.DatePickerSingle(date=datetime.datetime(2002, 9, 26, 15, 27), style={"border-color": "black"}),
+            dbc.Button("Voyager", id="voyage", className="button-sm")
         ], width=5, style={"marginRight" : "20px"}, align="center"),
         dbc.Col([
-            html.H4("Correction"),
+            html.H4("Balancement"),
             dcc.Slider(
                 id="correction",
-                min=-10,
-                max=10,
+                min=-7,
+                max=7,
                 value=0,
                 step=1,
                 className="vertical-slider",
